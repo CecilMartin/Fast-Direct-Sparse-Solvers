@@ -28,7 +28,7 @@ BV_flag = "Dirichlet"; % "Neumann"
 ordering_flag = "Nested"; % "Sweeping"
 
 
-n = 4 ;  % Number of points for one column, total points would be n^2
+n = 13^2 ;  % Number of points for one column, total points would be n^2
 occ = 8;  % Parameter for the factorization, looks like the size of matrix on the lead node
 rank_or_tol = 1e-9; % Tolerance for the rank approximation (epsilon)
 

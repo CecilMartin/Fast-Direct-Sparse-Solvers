@@ -2,7 +2,7 @@ function u = sweeping_buffered(n,m,b,A,f,occ,rank_or_tol)
 assert(n==1+m*(b+1))
 
 % Update the buffered stiffness matrix and source term
-A_tilde = zeros((m+1)*n);
+A_tilde = sparse((m+1)*n, (m+1)*n);
 f_tilde = zeros((m+1)*n, 1);
 I1 = 1:n;
 
@@ -30,18 +30,19 @@ end
 
 
 I1 = 1:n;
+opts = struct('Tmax',2,'skip',1,'verb',0);
 % x is an important input for hifie2, but I'm not sure the meaning of it
 sn = round(sqrt(n));
 [x1,x2] = ndgrid((1:sn)/sn); x = [x1(:) x2(:)]';
 % Efficient factorization and record it in the cell
-F_all{1} = hifie2(A_tilde(I1, I1),x,occ,rank_or_tol,[], []);
+F_all{1} = hifie2(A_tilde(I1, I1),x,occ,rank_or_tol,[], opts);
 for k = 1:m
     Ik = k*n + I1;
     % Compute the Schur complement (I didn't do the inverse, the Xk as the 
     % algorithm in the book, but merely the Schur complement Sk)
     S = A_tilde(Ik, Ik) - A_tilde(Ik, Ik-n) * hifie_sv(F_all{k}, A_tilde(Ik-n, Ik)); % Sparse-dense multi
     % Efficient factorization and record it in the cell
-    F_all{k+1} = hifie2(S,x,occ,rank_or_tol,[], []);   
+    F_all{k+1} = hifie2(S,x,occ,rank_or_tol,[], opts);   
     f_tilde(Ik) = f_tilde(Ik) - A_tilde(Ik, Ik-n)*hifie_sv(F_all{k}, f_tilde(Ik-n));
 end
 

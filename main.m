@@ -11,7 +11,8 @@ clear;close all;clc;
 
 % PATH
 addpath(genpath(pwd));
-FLAM_path = '/home/cecil/Project/FLAM';
+% FLAM_path = '/home/cecil/Project/FLAM';
+FLAM_path = '../../Final project/Code/FLAM-master';
 if ~(exist('hifie2'))
     current_path = pwd;
     cd(FLAM_path);
@@ -20,22 +21,27 @@ if ~(exist('hifie2'))
 end
 
 D = 2; %2D
-flag = "orig_laplace";
+% flag = "orig_laplace";
 % orig_laplace, standard 5pt laplace
+flag = "orig_helmholtz";
 % orig_helmholtz, standart 5pt laplace + centered difference for 1st order
 % term
 BV_flag = "Dirichlet"; % "Neumann"
 ordering_flag = "Nested"; % "Sweeping"
 
 
-n = 4 ;  % Number of points for one column, total points would be n^2
+n = 64 ;  % Number of points for one column, total points would be n^2
 occ = 8;  % Parameter for the factorization, looks like the size of matrix on the lead node
 rank_or_tol = 1e-9; % Tolerance for the rank approximation (epsilon)
 
-[A] = get_A(n+1,flag); % Get the sparse stiffness matrix A
+kappa = 10;
+f_fun_test = @(x) (2*pi^2 - kappa^2) * sin(pi*x(:, 1)) .* cos(pi*x(:, 2));
+
+[A] = get_A(n+1,flag, kappa); % Get the sparse stiffness matrix A
 % Get the load matrix
 % f = randn(n^2,1); 
-f = get_f(n+1,@bv_fun_test,@f_fun_test,flag);
+
+f = get_f(n+1,@bv_fun_test,f_fun_test,flag,kappa);
 
 tic;
 

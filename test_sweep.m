@@ -8,7 +8,17 @@
 % The real solution is u = sin(pi*x) * cos(pi*y)
 % Equation: - Delta u = f = 2*pi^2 u = 2*pi^2 * sin(pi*x) * cos(pi*y)
 
-n = 4^3 ;  % Number of points for one column, total points would be n^2
+% add FLAM
+FLAM_path = '/home/cecil/Project/FLAM';
+if ~(exist('hifie2'))
+    current_path = pwd;
+    cd(FLAM_path);
+    startup;
+    cd(current_path);
+end
+
+
+n = 4^2 ;  % Number of points for one column, total points would be n^2
 occ = 8;  % Parameter for the factorization, looks like the size of matrix on the lead node
 rank_or_tol = 1e-9; % Tolerance for the rank approximation (epsilon)
 
@@ -50,7 +60,7 @@ end
 t = toc;
 fprintf('hifie2 time: %10.4e (s) \n',t);
 
-[x1, x2] = ndgrid((1:n)/(n+1)); x = [x2(:) 1-x1(:)];
+[x1, x2] = ndgrid((1:n)/(n+1)); x = [x1(:) x2(:)];
 u_rel = u_fun_test(x);
 
 fprintf('Error of the solution: %10.4e \n', norm(u - u_rel) / norm(u_rel));

@@ -81,7 +81,7 @@ end
 t = toc;
 fprintf('hifie2 time: %10.4e (s) \n',t);
 
-[x1, x2] = ndgrid((1:n)/(n+1)); x = [x2(:) 1-x1(:)];
+[x1, x2] = ndgrid((1:n)/(n+1)); x = [x1(:) x2(:)];
 u_rel = u_fun_test(x);
 
 fprintf('Error of the solution: %10.4e \n', norm(u - u_rel));

@@ -1,10 +1,3 @@
-% NOTES from GL: I've done the first part of the sweeping alogrithm (the
-% computation of Schur complement part). One of the current problems is
-% that now the size n (number of points for one column) have to be a square
-% number, (like to say, 64 is okay but 128 is not). That is mainly due to
-% I'm a little confused on how to use the function 'hifie2', which is used
-% to compute the 'efficient' factorization of the given matrix. 
-
 % The real solution is u = sin(pi*x) * cos(pi*y)
 % Equation: - Delta u = f = 2*pi^2 u = 2*pi^2 * sin(pi*x) * cos(pi*y)
 clear;close all;clc;
@@ -27,8 +20,9 @@ flag = "orig_laplace";
 BV_flag = "Dirichlet"; % "Neumann"
 ordering_flag = "Nested"; % "Sweeping"
 
-
-n = 4 ;  % Number of points for one column, total points would be n^2
+n = 4^4 ;  % Number of points for one column, total points would be n^2
+b = 16;  % Width of buffer
+m = 15;  % Number of survival columns, n = 1 + m * (b+1)
 occ = 8;  % Parameter for the factorization, looks like the size of matrix on the lead node
 rank_or_tol = 1e-9; % Tolerance for the rank approximation (epsilon)
 
@@ -39,12 +33,13 @@ f = get_f(n+1,@bv_fun_test,@f_fun_test,flag);
 
 tic;
 
-u = sweeping(n,A,f,occ,rank_or_tol);
+u = sweeping_buffered(n,m,b,A,f,occ,rank_or_tol);
 
 t = toc;
+
 fprintf('hifie2 time: %10.4e (s) \n',t);
 
 [x1, x2] = ndgrid((1:n)/(n+1)); x = [x1(:) x2(:)];
 u_rel = u_fun_test(x);
 
-fprintf('Error of the solution: %10.4e \n', norm(u - u_rel) / norm(u_rel));
+fprintf('Error of the solution: %10.4e \n', norm(u - u_rel));

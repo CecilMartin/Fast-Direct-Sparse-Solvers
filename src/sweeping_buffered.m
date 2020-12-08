@@ -1,19 +1,5 @@
-% The real solution is u = sin(pi*x) * cos(pi*y)
-% Equation: - Delta u = f = 2*pi^2 u = 2*pi^2 * sin(pi*x) * cos(pi*y)
-clear;
-
-n = 4^4 ;  % Number of points for one column, total points would be n^2
-b = 16;  % Width of buffer
-m = 15;  % Number of survival columns, n = 1 + m * (b+1)
-occ = 8;  % Parameter for the factorization, looks like the size of matrix on the lead node
-rank_or_tol = 1e-9; % Tolerance for the rank approximation (epsilon)
-
-[A] = get_A_orig_test(n+1); % Get the sparse stiffness matrix A
-% Get the load matrix
-% f = randn(n^2,1); 
-f = get_f_orig(n+1,@bv_fun_test,@f_fun_test);
-
-tic;
+function u = sweeping_buffered(n,m,b,A,f,occ,rank_or_tol)
+assert(n==1+m*(b+1))
 
 % Update the buffered stiffness matrix and source term
 A_tilde = zeros((m+1)*n);
@@ -77,11 +63,4 @@ for i = 1:m
     I2ip1 = i*(b+1)*n + I1;  % Index of I_2k+1 in original A
     u(I2i) = A(I2i, I2i) \ (f(I2i) - A(I2i, I2im1)*u(I2im1) - A(I2i, I2ip1)*u(I2ip1));
 end
-
-t = toc;
-fprintf('hifie2 time: %10.4e (s) \n',t);
-
-[x1, x2] = ndgrid((1:n)/(n+1)); x = [x1(:) x2(:)];
-u_rel = u_fun_test(x);
-
-fprintf('Error of the solution: %10.4e \n', norm(u - u_rel));
+end

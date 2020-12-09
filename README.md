@@ -19,11 +19,11 @@ Guanchun and I(Zhe Chen) implemeeted this matlab library for the FDSS(Fast direc
 
 1. [Final brief slides](https://github.com/CecilMartin/Fast-Direct-Sparse-Solvers/blob/master/doc/Fast_Solver_Final_Project_Pre__FDSS.pdf)
 
-2. [report](ttps://github.com/CecilMartin/Fast-Direct-Sparse-Solvers/blob/master/doc/Fast_Solver_Final_Project.pdf)
+2. [Final report](https://github.com/CecilMartin/Fast-Direct-Sparse-Solvers/blob/master/doc/Fast_Solver_Final_Project.pdf)
 
 3. [Intro slides for Chapter 21](https://github.com/CecilMartin/Fast-Direct-Sparse-Solvers/blob/master/doc/FDSS.pdf)
 
-4. [Intro slides for Chapter 22](https://github.com/CecilMartin/Fast-Direct-Sparse-Solvers/blob/master/doc/Linear Complexity.pdf)
+4. [Intro slides for Chapter 22](https://github.com/CecilMartin/Fast-Direct-Sparse-Solvers/blob/master/doc/LinearComplexity.pdf)
 
 
 ### Dependency

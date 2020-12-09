@@ -1,5 +1,11 @@
 clear;close all;clc;
 
+set(0,'defaulttextinterpreter','latex')
+set(0,'defaultAxesFontName', 'Times New Roman')
+set(0,'DefaultAxesFontSize',22)
+set(groot, 'defaultAxesTickLabelInterpreter','latex'); 
+set(groot, 'defaultLegendInterpreter','latex');
+
 % PATH
 addpath(genpath(pwd));
 % FLAM_path = '/home/cecil/Project/FLAM';
@@ -22,7 +28,7 @@ flag = "orig_laplace";
 BV_flag = "Dirichlet"; % "Neumann"
 ordering_flag = "Nested"; % "Sweeping"
 
-tol_lst = [1e-6, 1e-9, 1e-12];
+tol_lst = [1e-3, 1e-6, 1e-9];
 n_lst = round(sqrt(2.^(2:7))).^2;
 
 occ = 8;  % Parameter for the factorization, looks like the size of matrix on the lead node
@@ -48,10 +54,10 @@ for m = 1:length(tol_lst) % Tolerance for the rank approximation (epsilon)
 end
 
 fig1 = figure(1);
-loglog(n_lst, time_orig, 's-');
-xlabel('n (number of points of one line)');
-ylabel('Time');
-title('Running time of Laplacian Eq');
+loglog(n_lst.^2, time_orig, 's-');
+xlabel('N');
+ylabel('Time(s)');
+% title('Running time of Laplacian Eq');
 legend(lgd, 'Location', 'northwest');
 set(gca,'FontSize',16);
 
@@ -77,10 +83,11 @@ occ = 8;  % Parameter for the factorization, looks like the size of matrix on th
 time_orig = zeros(length(kappa_lst), length(n_lst));
 for m = 1:length(kappa_lst) % Tolerance for the rank approximation (epsilon)
     kappa = kappa_lst(m);
-    lgd{m} = sprintf('kappa = %d', kappa);
+    lgd{m} = ['$\kappa$ = ',num2str(kappa)];
     for k = 1:length(n_lst) % Number of points for one column, total points would be n^2
         n = n_lst(k);
         [A] = get_A(n+1,flag,kappa); % Get the sparse stiffness matrix A
+%         u_fun_helm = @(x) sin(kappa/sqrt(2)*x(:, 1)) .* cos(kappa/sqrt(2)*x(:, 2));
         u_fun_helm = @(x) sin(kappa*x(:, 1)) + cos(kappa*x(:, 2));
         bv_fun_helm = @(x) u_fun_helm(x);
         f = get_f(n+1,bv_fun_helm,@f_fun_test,flag,kappa); % Get the load matrix
@@ -96,10 +103,10 @@ for m = 1:length(kappa_lst) % Tolerance for the rank approximation (epsilon)
     end
 end
 fig2 = figure(2);
-loglog(n_lst, time_orig, 's-');
-xlabel('n (number of points of one line)');
+loglog(n_lst.^2, time_orig, 's-');
+xlabel('N');
 ylabel('Time');
-title('Running time of Laplacian Eq');
+% title('Running time of Laplacian Eq');
 legend(lgd, 'Location', 'northwest');
 set(gca,'FontSize',16);
 
@@ -150,5 +157,60 @@ fig3 = figure(3);
 plot(b_lst, time_buffer, 's-');
 xlabel('b (width of buffer)');
 ylabel('Time');
-title('Running time of Laplacian Eq');
+% title('Running time of Laplacian Eq');
 set(gca,'FontSize',16);
+
+%% Generate Figure 4
+% Skeletonization factorization ID
+
+D = 2; %2D
+flag = "orig_laplace";
+% orig_laplace, standard 5pt laplace
+% orig_helmholtz, standart 5pt laplace + centered difference for 1st order
+% term
+BV_flag = "Dirichlet"; % "Neumann"
+ordering_flag = "Nested"; % "Sweeping"
+
+tol_lst = [1e-3, 1e-6, 1e-9, 1e-12, 1e-15];
+n_lst = round(sqrt(2.^(2:10))).^2;
+
+occ = 16;  % Parameter for the factorization, looks like the size of matrix on the lead node
+repeat = 4;
+
+time_orig = zeros(length(tol_lst), length(n_lst));
+for m = 1:length(tol_lst) % Tolerance for the rank approximation (epsilon)
+    tol = tol_lst(m);
+    lgd{m} = sprintf('tol = %2.1e', tol);
+    for k = 1:length(n_lst) % Number of points for one column, total points would be n^2
+        n = n_lst(k);
+        [A] = get_A(n+1,flag); % Get the sparse stiffness matrix A
+        f = get_f(n+1,@bv_fun_test,@f_fun_test,flag); % Get the load matrix
+        I1 = 1:n;
+        % x is an important input for hifie2, but I'm not sure the meaning of it
+        sn = round(sqrt(n));
+        [x1,x2] = ndgrid((1:sn)/sn); x = [x1(:) x2(:)]';
+        opts = struct('Tmax',2,'skip',1,'verb',0);
+        % Efficient factorization and record it in the cell
+        tmp = hifie2(A(I1, I1),x,occ,rank_or_tol,[], opts);
+        tic;
+        for i = 1:repeat
+            tmp = hifie2(A(I1, I1),x,occ,rank_or_tol,[], opts);
+        end
+        t = toc;
+
+%         [x1, x2] = ndgrid((1:n)/(n+1)); x = [x1(:) x2(:)];
+%         u_rel = u_fun_test(x);
+        time_orig(m, k) = t/repeat;
+        % fprintf('tol = %2.1e, n = %d finished! \n', tol, n);
+%         fprintf('tol = %2.1e, n = %d, time: %10.4e (s), Error of the solution: %10.4e \n', tol, n, t, norm(u - u_rel) / norm(u_rel));
+    end
+end
+
+fig1 = figure(4);
+loglog(n_lst.^2, time_orig, 's-');
+xlabel('N');
+ylabel('Time');
+% title('Running time of Laplacian Eq');
+legend(lgd, 'Location', 'northwest');
+set(gca,'FontSize',16);
+

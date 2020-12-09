@@ -28,7 +28,7 @@ flag = "orig_laplace";
 BV_flag = "Dirichlet"; % "Neumann"
 ordering_flag = "Nested"; % "Sweeping"
 
-tol_lst = [1e-3, 1e-6, 1e-9];
+tol_lst = [1e-3, 1e-8, 1e-13];
 n_lst = round(sqrt(2.^(2:7))).^2;
 
 occ = 8;  % Parameter for the factorization, looks like the size of matrix on the lead node
@@ -74,21 +74,23 @@ flag = "orig_helmholtz";
 BV_flag = "Dirichlet"; % "Neumann"
 ordering_flag = "Nested"; % "Sweeping"
 
-rank_or_tol = 1e-9;
+rank_or_tol = 1e-12;
 kappa_lst = [0, 1, 10, 20];
 n_lst = round(sqrt(2.^(2:7))).^2;
 
-occ = 8;  % Parameter for the factorization, looks like the size of matrix on the lead node
+occ = 4;  % Parameter for the factorization, looks like the size of matrix on the lead node
 
 time_orig = zeros(length(kappa_lst), length(n_lst));
 for m = 1:length(kappa_lst) % Tolerance for the rank approximation (epsilon)
-    kappa = kappa_lst(m);
-    lgd{m} = ['$\kappa$ = ',num2str(kappa)];
+    kappa = kappa_lst(m); 
+    lgd{m} = ['$\kappa$ = 2 $\pi$ * ',num2str(kappa)];
+    kappa = kappa * (1*pi);
     for k = 1:length(n_lst) % Number of points for one column, total points would be n^2
         n = n_lst(k);
         [A] = get_A(n+1,flag,kappa); % Get the sparse stiffness matrix A
 %         u_fun_helm = @(x) sin(kappa/sqrt(2)*x(:, 1)) .* cos(kappa/sqrt(2)*x(:, 2));
-        u_fun_helm = @(x) sin(kappa*x(:, 1)) + cos(kappa*x(:, 2));
+        u_fun_helm = @(x) sin(kappa*x(:, 1)) + cos(kappa*x(:, 2)) ...
+            + sin(pi*x(:, 1)) .* exp(pi*x(:, 2));
         bv_fun_helm = @(x) u_fun_helm(x);
         f = get_f(n+1,bv_fun_helm,@f_fun_test,flag,kappa); % Get the load matrix
         tic;
@@ -171,11 +173,11 @@ flag = "orig_laplace";
 BV_flag = "Dirichlet"; % "Neumann"
 ordering_flag = "Nested"; % "Sweeping"
 
-tol_lst = [1e-3, 1e-6, 1e-9, 1e-12, 1e-15];
-n_lst = round(sqrt(2.^(2:10))).^2;
+tol_lst = [1e-3, 1e-6, 1e-9, 1e-12, 1e-14];
+n_lst = 4.^(1:4);
 
 occ = 16;  % Parameter for the factorization, looks like the size of matrix on the lead node
-repeat = 4;
+repeat = 8;
 
 time_orig = zeros(length(tol_lst), length(n_lst));
 for m = 1:length(tol_lst) % Tolerance for the rank approximation (epsilon)
@@ -190,18 +192,25 @@ for m = 1:length(tol_lst) % Tolerance for the rank approximation (epsilon)
         sn = round(sqrt(n));
         [x1,x2] = ndgrid((1:sn)/sn); x = [x1(:) x2(:)]';
         opts = struct('Tmax',2,'skip',1,'verb',0);
-        % Efficient factorization and record it in the cell
-        tmp = hifie2(A(I1, I1),x,occ,rank_or_tol,[], opts);
+        % Pre-run       
+        F_tmp{1} = hifie2(A(I1, I1),x,occ,tol,[], opts);
+        for i = 2:4
+            Ii = (i-1)*n + I1;
+            S = A(Ii, Ii) - A(Ii, Ii-n) * hifie_sv(F_tmp{i-1}, A(Ii-n, Ii)); % Sparse-dense multi
+
+            % Efficient factorization and record it in the cell
+            F_tmp{i} = hifie2(S,x,occ,tol,[], opts);
+        end
         tic;
         for i = 1:repeat
-            tmp = hifie2(A(I1, I1),x,occ,rank_or_tol,[], opts);
+            tmp = hifie2(A,n+1,occ,tol, [], opts);
         end
         t = toc;
 
 %         [x1, x2] = ndgrid((1:n)/(n+1)); x = [x1(:) x2(:)];
 %         u_rel = u_fun_test(x);
         time_orig(m, k) = t/repeat;
-        % fprintf('tol = %2.1e, n = %d finished! \n', tol, n);
+        fprintf('tol = %2.1e, n = %d finished! \n', tol, n);
 %         fprintf('tol = %2.1e, n = %d, time: %10.4e (s), Error of the solution: %10.4e \n', tol, n, t, norm(u - u_rel) / norm(u_rel));
     end
 end

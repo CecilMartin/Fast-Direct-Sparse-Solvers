@@ -6,6 +6,7 @@ sn = round(sqrt(n));
 opts = struct('Tmax',2,'skip',1,'verb',0);
 % Efficient factorization and record it in the cell
 F_all{1} = hifie2(A(I1, I1),x,occ,rank_or_tol,[], opts);
+
 f_tilde = zeros(n);
 f_tilde(:, 1) = f(I1);
 for i = 2:n
@@ -16,6 +17,7 @@ for i = 2:n
 
     % Efficient factorization and record it in the cell
     F_all{i} = hifie2(S,x,occ,rank_or_tol,[], opts);
+
     f_tilde(:, i) = f(Ii) - A(Ii, Ii-n)*hifie_sv(F_all{i-1}, f_tilde(:, i-1));
     
 end
